@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Budget Prediction App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-pie text-success me-2"></i>
+            Dashboard Overview
+        </h1>
+    </div>
+</div>
+
+<!-- Key Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100 fade-in-up" style="animation-delay: 0.1s;">
+            <div class="card-body text-center">
+                <i class="fas fa-arrow-up financial-icon mb-2 float"></i>
+                <div class="stat-value text-success" data-count="{{ total_income }}">{{ "%.2f"|format(total_income) }}</div>
+                <div class="stat-label">Total Income</div>
+                <small class="text-muted">{{ current_currency }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100 fade-in-up" style="animation-delay: 0.2s;">
+            <div class="card-body text-center">
+                <i class="fas fa-arrow-down financial-icon mb-2 float" style="color: #dc3545; animation-delay: 0.5s;"></i>
+                <div class="stat-value text-danger" data-count="{{ total_expenses }}">{{ "%.2f"|format(total_expenses) }}</div>
+                <div class="stat-label">Total Expenses</div>
+                <small class="text-muted">{{ current_currency }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100 fade-in-up" style="animation-delay: 0.3s;">
+            <div class="card-body text-center">
+                <i class="fas fa-wallet financial-icon mb-2 float" style="animation-delay: 1s;"></i>
+                <div class="stat-value {% if remaining_budget >= 0 %}text-success{% else %}text-danger{% endif %}" data-count="{{ remaining_budget }}">
+                    {{ "%.2f"|format(remaining_budget) }}
+                </div>
+                <div class="stat-label">Remaining Budget</div>
+                <small class="text-muted">{{ current_currency }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card h-100 fade-in-up" style="animation-delay: 0.4s;">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-day financial-icon mb-2 float" style="animation-delay: 1.5s;"></i>
+                <div class="stat-value text-info" data-count="{{ daily_save }}">{{ "%.2f"|format(daily_save) }}</div>
+                <div class="stat-label">Daily Save Goal</div>
+                <small class="text-muted">{{ current_currency }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerts and Predictions -->
+{% if predicted_date %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning slide-in-left" role="alert" style="animation-delay: 0.5s;">
+            <h5 class="alert-heading">
+                <i class="fas fa-exclamation-triangle me-2 float" style="animation-delay: 0.8s;"></i>
+                Budget Prediction Alert
+            </h5>
+            <p class="mb-0">
+                Based on your current spending rate of {{ "%.2f"|format(spending_rate) }} {{ current_currency }}/day, 
+                you are predicted to run out of budget by <strong>{{ predicted_date.strftime('%B %d, %Y') }}</strong>.
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Savings Goal Progress -->
+{% if target_savings > 0 %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-piggy-bank me-2"></i>
+                    Savings Goal Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Target: {{ "%.2f"|format(target_savings) }} {{ current_currency }}</span>
+                    <span>{{ "%.1f"|format(savings_progress) }}%</span>
+                </div>
+                <div class="progress mb-3">
+                    <div class="progress-bar" role="progressbar" style="width: {{ savings_progress }}%">
+                        {{ "%.1f"|format(savings_progress) }}%
+                    </div>
+                </div>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-lightbulb me-1"></i>
+                    Save {{ "%.2f"|format(daily_save) }} {{ current_currency }} per day to reach your goal.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container fade-in-up" style="animation-delay: 0.6s;">
+            <h5 class="mb-3">
+                <i class="fas fa-chart-pie text-success me-2 float" style="animation-delay: 2s;"></i>
+                Expenses by Category
+            </h5>
+            {% if pie_chart %}
+                <div id="pieChart" class="chart-loading"></div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-chart-pie fa-3x mb-3 float"></i>
+                    <p>No expense data available. Add some expenses to see the chart!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="chart-container fade-in-up" style="animation-delay: 0.7s;">
+            <h5 class="mb-3">
+                <i class="fas fa-chart-bar text-success me-2 float" style="animation-delay: 2.2s;"></i>
+                Category Breakdown
+            </h5>
+            {% if bar_chart %}
+                <div id="barChart" class="chart-loading"></div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-chart-bar fa-3x mb-3 float"></i>
+                    <p>No expense data available. Add some expenses to see the chart!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Category Summary -->
+{% if category_data %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list text-success me-2"></i>
+                    Category Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for category, amount in category_data.items() %}
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                            <span class="fw-bold">{{ category }}</span>
+                            <span class="badge bg-success fs-6">{{ "%.2f"|format(amount) }} {{ current_currency }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt text-success me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('add_expense') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Add Expense
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('split_bill') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-users me-2"></i>Split Bill
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('savings_goal') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-piggy-bank me-2"></i>Set Goal
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-2">
+                        <a href="{{ url_for('settings') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Counter animation for statistics
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-value[data-count]');
+        
+        counters.forEach(counter => {
+            const target = parseFloat(counter.getAttribute('data-count'));
+            const duration = 2000; // 2 seconds
+            const increment = target / (duration / 16); // 60fps
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = current.toFixed(2);
+            }, 16);
+        });
+    }
+    
+    // Progress bar animation
+    function animateProgressBars() {
+        const progressBars = document.querySelectorAll('.progress-bar');
+        progressBars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 500);
+        });
+    }
+    
+    // Chart loading animation
+    function loadCharts() {
+        {% if pie_chart %}
+        setTimeout(() => {
+            var pieData = {{ pie_chart|safe }};
+            Plotly.newPlot('pieChart', pieData.data, pieData.layout, {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            });
+            document.getElementById('pieChart').classList.remove('chart-loading');
+        }, 1000);
+        {% endif %}
+        
+        {% if bar_chart %}
+        setTimeout(() => {
+            var barData = {{ bar_chart|safe }};
+            Plotly.newPlot('barChart', barData.data, barData.layout, {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            });
+            document.getElementById('barChart').classList.remove('chart-loading');
+        }, 1200);
+        {% endif %}
+    }
+    
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all animated elements
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations
+        animateCounters();
+        animateProgressBars();
+        loadCharts();
+        
+        // Add scroll animations to cards
+        const animatedElements = document.querySelectorAll('.card, .alert');
+        animatedElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+        
+        // Add hover effects to category badges
+        const badges = document.querySelectorAll('.badge');
+        badges.forEach(badge => {
+            badge.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.transition = 'transform 0.2s ease';
+            });
+            
+            badge.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+        
+        // Add click ripple effect to buttons
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.classList.add('ripple');
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+    });
+    
+    // Add ripple effect styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        .chart-loading {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 10px;
+            min-height: 300px;
+        }
+        
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Auto-refresh every 30 seconds
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

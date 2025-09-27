@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}Split Bill - Budget Prediction App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Bill Splitter Calculator
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-calculator text-success me-2"></i>
+                                    Calculator
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <label for="total-bill" class="form-label">Total Bill Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="total-bill" 
+                                               step="0.01" min="0" placeholder="0.00" onchange="calculateSplit()">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="num-people" class="form-label">Number of People</label>
+                                    <input type="number" class="form-control" id="num-people" 
+                                           min="2" value="2" onchange="calculateSplit()">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tip-percentage" class="form-label">Tip Percentage</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="tip-percentage" 
+                                               min="0" max="100" value="15" onchange="calculateSplit()">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-primary w-100" onclick="calculateSplit()">
+                                    <i class="fas fa-calculator me-2"></i>Calculate Split
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="fas fa-receipt me-2"></i>
+                                    Bill Breakdown
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Subtotal:</span>
+                                        <span id="subtotal">$0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Tip (15%):</span>
+                                        <span id="tip-amount">$0.00</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Total:</span>
+                                        <span id="total-with-tip">$0.00</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-light">
+                                    <h6 class="alert-heading mb-2">
+                                        <i class="fas fa-user-friends me-1"></i>
+                                        Per Person
+                                    </h6>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Amount per person:</span>
+                                        <span id="per-person" class="fw-bold fs-5">$0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Split Details -->
+                <div class="row" id="split-details" style="display: none;">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>
+                                    Individual Breakdown
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="people-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Person</th>
+                                                <th>Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="people-tbody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <button class="btn btn-outline-success" onclick="addPerson()">
+                                        <i class="fas fa-plus me-2"></i>Add Person
+                                    </button>
+                                    <button class="btn btn-primary" onclick="saveSplit()">
+                                        <i class="fas fa-save me-2"></i>Save as Expense
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Split History -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Splits
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Total Amount</th>
+                                <th>People</th>
+                                <th>Your Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    No recent splits to display
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let peopleCount = 2;
+    let currentSplitData = null;
+    
+    function calculateSplit() {
+        const totalBill = parseFloat(document.getElementById('total-bill').value) || 0;
+        const numPeople = parseInt(document.getElementById('num-people').value) || 2;
+        const tipPercentage = parseFloat(document.getElementById('tip-percentage').value) || 15;
+        
+        const subtotal = totalBill / (1 + tipPercentage / 100);
+        const tipAmount = totalBill - subtotal;
+        const totalWithTip = totalBill;
+        const perPerson = totalWithTip / numPeople;
+        
+        // Animate number changes
+        animateNumberChange('subtotal', '$' + subtotal.toFixed(2));
+        animateNumberChange('tip-amount', '$' + tipAmount.toFixed(2));
+        animateNumberChange('total-with-tip', '$' + totalWithTip.toFixed(2));
+        animateNumberChange('per-person', '$' + perPerson.toFixed(2));
+        
+        // Update people count if changed
+        if (numPeople !== peopleCount) {
+            peopleCount = numPeople;
+            updatePeopleTable();
+        }
+        
+        // Show split details
+        document.getElementById('split-details').style.display = 'block';
+        
+        // Store current split data
+        currentSplitData = {
+            totalBill: totalBill,
+            numPeople: numPeople,
+            tipPercentage: tipPercentage,
+            subtotal: subtotal,
+            tipAmount: tipAmount,
+            perPerson: perPerson
+        };
+    }
+    
+    function updatePeopleTable() {
+        const tbody = document.getElementById('people-tbody');
+        tbody.innerHTML = '';
+        
+        for (let i = 1; i <= peopleCount; i++) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <input type="text" class="form-control form-control-sm" 
+                           value="Person ${i}" id="person-${i}-name">
+                </td>
+                <td>
+                    <span class="fw-bold">$${currentSplitData ? currentSplitData.perPerson.toFixed(2) : '0.00'}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removePerson(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+    }
+    
+    function addPerson() {
+        peopleCount++;
+        document.getElementById('num-people').value = peopleCount;
+        calculateSplit();
+    }
+    
+    function removePerson(personId) {
+        if (peopleCount > 2) {
+            peopleCount--;
+            document.getElementById('num-people').value = peopleCount;
+            calculateSplit();
+        } else {
+            alert('At least 2 people are required for splitting!');
+        }
+    }
+    
+    function saveSplit() {
+        if (!currentSplitData) {
+            alert('Please calculate the split first!');
+            return;
+        }
+        
+        // Collect person names
+        const people = [];
+        for (let i = 1; i <= peopleCount; i++) {
+            const nameInput = document.getElementById(`person-${i}-name`);
+            if (nameInput) {
+                people.push(nameInput.value || `Person ${i}`);
+            }
+        }
+        
+        // Create expense data
+        const expenseData = {
+            amount: currentSplitData.totalBill,
+            description: `Split bill with ${peopleCount} people: ${people.join(', ')}`,
+            category_id: 1, // Default to Food category
+            date: new Date().toISOString().split('T')[0],
+            is_split: true,
+            total_people: peopleCount,
+            split_amount: currentSplitData.perPerson
+        };
+        
+        // Here you would typically send this to the server
+        console.log('Split data to save:', expenseData);
+        alert('Split saved! (This would normally save to the database)');
+        
+        // Reset form
+        document.getElementById('total-bill').value = '';
+        document.getElementById('num-people').value = '2';
+        document.getElementById('tip-percentage').value = '15';
+        document.getElementById('split-details').style.display = 'none';
+        peopleCount = 2;
+        currentSplitData = null;
+    }
+    
+    // Animate number changes
+    function animateNumberChange(elementId, newValue) {
+        const element = document.getElementById(elementId);
+        element.style.transform = 'scale(1.1)';
+        element.style.transition = 'transform 0.2s ease';
+        
+        setTimeout(() => {
+            element.textContent = newValue;
+            element.style.transform = 'scale(1)';
+        }, 100);
+    }
+    
+    // Add input validation with visual feedback
+    function addInputValidation() {
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value < 0) {
+                    this.style.borderColor = '#dc3545';
+                    this.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+                } else {
+                    this.style.borderColor = '#28a745';
+                    this.style.boxShadow = '0 0 0 0.2rem rgba(40, 167, 69, 0.25)';
+                }
+            });
+        });
+    }
+    
+    // Initialize with default values
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateSplit();
+        addInputValidation();
+        
+        // Add pulse animation to result cards
+        const resultCards = document.querySelectorAll('.card.bg-success');
+        resultCards.forEach(card => {
+            card.style.animation = 'pulse 2s infinite';
+        });
+    });
+</script>
+{% endblock %}

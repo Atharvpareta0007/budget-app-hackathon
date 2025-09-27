@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense - Budget Prediction App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Add New Expense
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Amount
+                            </label>
+                            <input type="number" class="form-control" id="amount" name="amount" 
+                                   step="0.01" min="0" required placeholder="0.00">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Category
+                            </label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="fas fa-edit me-1"></i>Description
+                        </label>
+                        <input type="text" class="form-control" id="description" name="description" 
+                               required placeholder="What did you spend on?">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="date" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Date
+                            </label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" class="form-check-input" id="is_split" name="is_split" 
+                                       onchange="toggleSplitOptions()">
+                                <label class="form-check-label" for="is_split">
+                                    <i class="fas fa-users me-1"></i>Split with Friends
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="split-options" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="total_people" class="form-label">
+                                    <i class="fas fa-user-friends me-1"></i>Number of People
+                                </label>
+                                <input type="number" class="form-control" id="total_people" name="total_people" 
+                                       min="2" value="2" onchange="calculateSplit()">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calculator me-1"></i>Your Share
+                                </label>
+                                <div class="form-control-plaintext" id="split-amount">
+                                    $0.00
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Add Expense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Recent Expenses -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Expenses
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Split</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if recent_expenses %}
+                                {% for expense in recent_expenses %}
+                                <tr class="fade-in-up" style="animation-delay: {{ loop.index0 * 0.1 }}s;">
+                                    <td>
+                                        <i class="fas fa-calendar me-1 text-muted"></i>
+                                        {{ expense.date.strftime('%m/%d/%Y') }}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-receipt me-1 text-muted"></i>
+                                        {{ expense.description }}
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ expense.category.color }}; color: white;">
+                                            <i class="fas fa-tag me-1"></i>
+                                            {{ expense.category.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong class="{% if expense.is_split %}text-info{% else %}text-success{% endif %}">
+                                            {{ get_currency_symbol(current_currency) }}{{ "%.2f"|format(convert_currency(expense.split_amount if expense.is_split else expense.amount, 'USD', current_currency)) }}
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        {% if expense.is_split %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-users me-1"></i>
+                                                {{ expense.total_people }} people
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">
+                                                <i class="fas fa-user me-1"></i>
+                                                Individual
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No recent expenses to display
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set today's date as default
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    
+    function toggleSplitOptions() {
+        const splitOptions = document.getElementById('split-options');
+        const isSplit = document.getElementById('is_split').checked;
+        
+        if (isSplit) {
+            splitOptions.style.display = 'block';
+            calculateSplit();
+        } else {
+            splitOptions.style.display = 'none';
+        }
+    }
+    
+    function calculateSplit() {
+        const amount = parseFloat(document.getElementById('amount').value) || 0;
+        const totalPeople = parseInt(document.getElementById('total_people').value) || 1;
+        const splitAmount = amount / totalPeople;
+        
+        document.getElementById('split-amount').textContent = 
+            '$' + splitAmount.toFixed(2) + ' per person';
+    }
+    
+    // Calculate split when amount changes
+    document.getElementById('amount').addEventListener('input', function() {
+        if (document.getElementById('is_split').checked) {
+            calculateSplit();
+        }
+    });
+    
+    document.getElementById('total_people').addEventListener('input', calculateSplit);
+</script>
+{% endblock %}

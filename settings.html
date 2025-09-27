@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Budget Prediction App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>
+                    Application Settings
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="currency" class="form-label">
+                            <i class="fas fa-dollar-sign me-1"></i>
+                            Default Currency
+                        </label>
+                        <select class="form-control" id="currency" name="currency" required>
+                            {% for currency in currencies %}
+                            <option value="{{ currency }}" {% if currency == current_currency %}selected{% endif %}>
+                                {{ currency }} - {{ get_currency_symbol(currency) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            Choose your preferred currency for displaying amounts
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Currency Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Currency Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Supported Currencies</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>USD - US Dollar ($)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>EUR - Euro (€)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>INR - Indian Rupee (₹)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>GBP - British Pound (£)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>CAD - Canadian Dollar (C$)</li>
+                            <li><i class="fas fa-check text-success me-2"></i>AUD - Australian Dollar (A$)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info">Current Exchange Rates</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Currency</th>
+                                        <th>Rate (vs USD)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>USD</td><td>1.00</td></tr>
+                                    <tr><td>EUR</td><td>0.85</td></tr>
+                                    <tr><td>INR</td><td>83.00</td></tr>
+                                    <tr><td>GBP</td><td>0.73</td></tr>
+                                    <tr><td>CAD</td><td>1.35</td></tr>
+                                    <tr><td>AUD</td><td>1.50</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Rates are simplified for demo purposes
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- App Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Application Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Features</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Expense Tracking</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Bill Splitting</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Savings Goals</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Budget Predictions</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Category Management</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Interactive Charts</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info">Technical Details</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-code text-info me-2"></i>Backend: Python Flask</li>
+                            <li><i class="fas fa-database text-info me-2"></i>Database: SQLite</li>
+                            <li><i class="fas fa-chart-bar text-info me-2"></i>Charts: Plotly.js</li>
+                            <li><i class="fas fa-paint-brush text-info me-2"></i>UI: Bootstrap 5</li>
+                            <li><i class="fas fa-mobile-alt text-info me-2"></i>Responsive Design</li>
+                            <li><i class="fas fa-palette text-info me-2"></i>Green Theme</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Management -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Data Management
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-download me-2"></i>
+                                Export Data
+                            </h6>
+                            <p class="mb-2">Export your financial data for backup or analysis.</p>
+                            <button class="btn btn-outline-info btn-sm" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>Export CSV
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-trash me-2"></i>
+                                Clear Data
+                            </h6>
+                            <p class="mb-2">Reset all data (use with caution).</p>
+                            <button class="btn btn-outline-warning btn-sm" onclick="clearData()">
+                                <i class="fas fa-trash me-2"></i>Clear All Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sample Data -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-seedling me-2"></i>
+                    Sample Data
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Need Demo Data?
+                    </h6>
+                    <p class="mb-2">Add sample expenses and income data to test the application.</p>
+                    <button class="btn btn-success" onclick="addSampleData()">
+                        <i class="fas fa-plus me-2"></i>Add Sample Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function exportData() {
+        alert('Export functionality would be implemented here. This would generate a CSV file with all your financial data.');
+    }
+    
+    function clearData() {
+        if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+            alert('Clear data functionality would be implemented here. This would remove all expenses, income, and goals.');
+        }
+    }
+    
+    function addSampleData() {
+        if (confirm('This will add sample expense and income data to help you explore the app. Continue?')) {
+            // This would typically make an AJAX request to add sample data
+            alert('Sample data has been added! Check your dashboard to see the new data.');
+            window.location.href = "{{ url_for('dashboard') }}";
+        }
+    }
+    
+    // Currency change preview
+    document.getElementById('currency').addEventListener('change', function() {
+        const selectedCurrency = this.value;
+        const symbols = {
+            'USD': '$',
+            'EUR': '€',
+            'INR': '₹',
+            'GBP': '£',
+            'CAD': 'C$',
+            'AUD': 'A$'
+        };
+        
+        // Show preview of currency change
+        const preview = document.createElement('div');
+        preview.className = 'alert alert-info mt-2';
+        preview.innerHTML = `<i class="fas fa-info-circle me-2"></i>Preview: Amounts will be displayed as ${symbols[selectedCurrency]}100.00`;
+        
+        // Remove existing preview
+        const existingPreview = document.querySelector('.currency-preview');
+        if (existingPreview) {
+            existingPreview.remove();
+        }
+        
+        preview.className += ' currency-preview';
+        this.parentNode.appendChild(preview);
+    });
+</script>
+{% endblock %}
